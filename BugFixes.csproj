@@ -21,6 +21,15 @@
     <PackageReference Include="BepInEx.PluginInfoProps" Version="2.*" />
     <PackageReference Include="UnityEngine.Modules" Version="2021.3.5" IncludeAssets="compile" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="ScenarioRuleLibrary">
+      <HintPath>$(HOME)/.steam/steamapps/common/Gloomhaven/GH_Data/Managed/ScenarioRuleLibrary.dll</HintPath>
+    </Reference>
+    <Reference Include="MapRuleLibrary">
+      <HintPath>$(HOME)/.steam/steamapps/common/Gloomhaven/GH_Data/Managed/MapRuleLibrary.dll</HintPath>
+    </Reference>
+  </ItemGroup>
   
   <ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="all" />
