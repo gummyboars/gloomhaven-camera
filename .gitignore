@@ -1,0 +1,7 @@
+# swp files from vim
+*.swp
+*.swo
+
+# compiled stuff
+bin/*
+obj/*
