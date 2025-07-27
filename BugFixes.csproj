@@ -29,6 +29,18 @@
     <Reference Include="MapRuleLibrary">
       <HintPath>$(HOME)/.steam/steamapps/common/Gloomhaven/GH_Data/Managed/MapRuleLibrary.dll</HintPath>
     </Reference>
+    <Reference Include="GH.Runtime">
+      <HintPath>$(HOME)/.steam/steamapps/common/Gloomhaven/GH_Data/Managed/GH.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="SM.Gamepad">
+      <HintPath>$(HOME)/.steam/steamapps/common/Gloomhaven/GH_Data/Managed/SM.Gamepad.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>$(HOME)/.steam/steamapps/common/Gloomhaven/GH_Data/Managed/UnityEngine.UI.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.TextMeshPro">
+      <HintPath>$(HOME)/.steam/steamapps/common/Gloomhaven/GH_Data/Managed/Unity.TextMeshPro.dll</HintPath>
+    </Reference>
   </ItemGroup>
   
   <ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
