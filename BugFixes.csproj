@@ -35,6 +35,12 @@
     <Reference Include="SM.Gamepad">
       <HintPath>$(HOME)/.steam/steamapps/common/Gloomhaven/GH_Data/Managed/SM.Gamepad.dll</HintPath>
     </Reference>
+    <Reference Include="ThirdParty">
+      <HintPath>$(HOME)/.steam/steamapps/common/Gloomhaven/GH_Data/Managed/ThirdParty.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>$(HOME)/.steam/steamapps/common/Gloomhaven/GH_Data/Managed/UnityEngine.dll</HintPath>
+    </Reference>
     <Reference Include="UnityEngine.UI">
       <HintPath>$(HOME)/.steam/steamapps/common/Gloomhaven/GH_Data/Managed/UnityEngine.UI.dll</HintPath>
     </Reference>

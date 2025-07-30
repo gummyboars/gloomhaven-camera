@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 
+using AsmodeeNet.Foundation;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -62,6 +63,36 @@ public static class Patch_Camera_SetOptimalViewPoint
     }
 }
 
+[HarmonyPatch(typeof(Choreographer), "Awake")]
+public static class Patch_Choreographer_Awake
+{
+    private static void Postfix()
+    {
+        KeyActionHandler kah = new KeyActionHandler(KeyAction.TOGGLE_SPEED, ToggleSpeed);
+        Singleton<KeyActionHandlerController>.Instance.AddHandler(kah);
+        BugFixPlugin.logger.LogInfo("Created new action handler for toggle speed");
+    }
+
+    public static void ToggleSpeed()
+    {
+        SaveData.Instance.Global.SpeedUpToggle = !SaveData.Instance.Global.SpeedUpToggle;
+        BugFixPlugin.logger.LogInfo($"SpeedUpToggle set to {SaveData.Instance.Global.SpeedUpToggle}");
+    }
+}
+
+[HarmonyPatch(typeof(Choreographer), "OnDestroy")]
+public static class Patch_Choreographer_OnDestroy
+{
+    private static void Prefix()
+    {
+        if (!CoreApplication.IsQuitting)
+        {
+            Singleton<KeyActionHandlerController>.Instance.RemoveHandler(KeyAction.TOGGLE_SPEED, Patch_Choreographer_Awake.ToggleSpeed);
+            BugFixPlugin.logger.LogInfo("Removed action handler for toggle speed");
+        }
+    }
+}
+ 
 [HarmonyPatch(typeof(UISubmenuGOWindow), nameof(UISubmenuGOWindow.Show))]
 public static class Patch_UISubmenuGOWindow_Show
 {
@@ -332,7 +363,54 @@ SetCurrentRoot(rootname) will
 - set _currentRoot
 HotkeyContainer is a MonoBehavior - but unrelated to what we're doing
 
+======================================================================
 
+[none]
+GHControls defines PlayerAction and GHAction types, which have a OnPressed and OnValueChanged callback
+ControlBindings has a MapBindingsToPlayerControls. it calls AddBinding on the PlayerActions
+InputManager is a singleton that contains a GHControls
+- Awake() will call InitialiseInControlGHControls() to initialise it with defaults
+- SetKey() will set a key to a specific action
+- RegisterToOnPressed() will associate a callback with a specific KeyAction
+KeyActionHandlerController is a singleton that contains a list of KeyActionHandler objects
+- AddHandler will add a KeyActionHandler to the list
+KeyActionHandler
+- has a KeyAction and an Action callback
+- has one or more blockers IKeyActionHandlerBlocker
+- the Action is set by the constructor
+- it will call RegisterToOnPressed() if all blockers are cleared (and unregister if blockers are added)
+
+Choreographer is a 15000 line class that is a MonoBehavior
+- this is the state machine for playing a scenario
+- it is not a singleton, but does have a static s_Choreographer
+- it contains all the game objects like the ReadyButton, UndoButton, etc
+- it has a ScenarioRuleLibrary.ScenarioState m_CurrentState
+- Awake()
+  - sets s_Choreographer
+  - calls ScenarioRuleClient.SetMessageHandler(this->MessageHandler)
+  - adds the OnGameSpeedChanged callback to the GlobalData
+  - adds the SwitchSkipAndUndoButtons callback to the GlobalData
+- Play() will call UnityGameEditorRuntime.LoadScenario()
+- when moving to the next round, disables input, updates state machine, then enables input
+- OnSceneLoadedCallback will disable input
+- OnSceneLoadedCallbackContinued will enable input
+- EndGameCoroutine will enable input
+- OnDestroy will enable input
+
+
+AddHandler may be called from anywhere - e.g. from CardsHandManager.Awake()
+SpeedUpButton is a MonoBehavior that calls InputManager.RegisterToOnPressed with an action and a callback
+
+[Script.GUI.SMNavigation.States.ScenarioStates]
+RoundStartScenarioState
+- Enter will call InitializeInput
+- InitializeInput will call SubscribeInput
+- SubscribeInput will call AddHandler on the KeyActionHandlerController
+
+[InControl]
+PlayerAction objects are in a set, and can be saved/loaded from a stream
+
+FIXME: use AddHandler in Awake(). remove it in EndGameCoroutine()
  */
 
 
@@ -365,6 +443,19 @@ public static class Patch_GlobalData_OnDeserialized
         foreach (GlobalData.KeyBinding kb in __instance.KeyBindings)
         {
             BugFixPlugin.logger.LogInfo($"Binding {kb.Code} => {kb.Action}");
+        }
+    }
+}
+
+[HarmonyPatch(typeof(KeyActionHandlerController), "AddHandler")]
+public static class Patch_KeyActionHandlerController_AddHandler
+{
+    private static void Prefix(KeyActionHandler handler)
+    {
+        if (handler.KeyAction == KeyAction.HIGHLIGHT || handler.KeyAction == KeyAction.ROTATE_CAMERA_LEFT || handler.KeyAction == KeyAction.DISPLAY_CARDS_HERO_1)
+        {
+            BugFixPlugin.logger.LogInfo($"AddHandler called {handler.KeyAction}");
+            BugFixPlugin.logger.LogInfo($"{Environment.StackTrace}");
         }
     }
 }
