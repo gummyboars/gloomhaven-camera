@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Runtime.Serialization;
 
 using AsmodeeNet.Foundation;
 using TMPro;
@@ -92,6 +93,65 @@ public static class Patch_Choreographer_OnDestroy
         }
     }
 }
+
+public static class CameraFollowHolder
+{
+    private static bool cameraFollowEnabled = true;
+    private static string featureName = "com.gummyboars.gloomhaven.cameraFollowDisabled";
+
+    public static void ToggleCameraFollow(bool autoCameraEnabled)
+    {
+        if (SaveData.Instance.Global == null)
+        {
+            return;
+        }
+        cameraFollowEnabled = autoCameraEnabled;
+        if (cameraFollowEnabled)
+        {
+            if (SaveData.Instance.Global.CompletedTutorialIDs.Contains(featureName))
+            {
+                SaveData.Instance.Global.CompletedTutorialIDs.Remove(featureName);
+                SaveData.Instance.SaveGlobalData();
+            }
+        }
+        else
+        {
+            if (!SaveData.Instance.Global.CompletedTutorialIDs.Contains(featureName))
+            {
+                SaveData.Instance.Global.CompletedTutorialIDs.Add(featureName);
+                SaveData.Instance.SaveGlobalData();
+            }
+        }
+    }
+
+    public static void InitializeCameraFollow(List<string> tutorialIDs)
+    {
+        cameraFollowEnabled = !tutorialIDs.Contains(featureName);
+    }
+
+    public static bool CameraFollowEnabled()
+    {
+        return cameraFollowEnabled;
+    }
+}
+ 
+[HarmonyPatch(typeof(CameraTargetFocalFollowController), nameof(CameraTargetFocalFollowController.SetPoint), new[] {typeof(GameObject)})]
+public static class Patch_SetPoint_GameObject
+{
+    private static bool Prefix()
+    {
+        return CameraFollowHolder.CameraFollowEnabled();
+    }
+}
+
+[HarmonyPatch(typeof(CameraTargetFocalFollowController), nameof(CameraTargetFocalFollowController.SetPoint), new[] {typeof(Vector3), typeof(bool)})]
+public static class Patch_SetPoint_Vector3
+{
+    private static bool Prefix()
+    {
+        return CameraFollowHolder.CameraFollowEnabled();
+    }
+}
  
 [HarmonyPatch(typeof(UISubmenuGOWindow), nameof(UISubmenuGOWindow.Show))]
 public static class Patch_UISubmenuGOWindow_Show
@@ -111,7 +171,7 @@ public static class Patch_UISubmenuGOWindow_Show
         BugFixPlugin.logger.LogInfo($"  {ts?.name} {ts?.activeSelf}");
     }
 
-    private static void PrintRecursive(Transform t, int depth)
+    public static void PrintRecursive(Transform t, int depth)
     {
         string s = "";
         for (int i = 0; i < depth; i++)
@@ -214,6 +274,52 @@ public static class Patch_HotkeyContainer_UpdateHotkeys
 }
 */
 
+[HarmonyPatch(typeof(GeneralSettings), "OnEnable")]
+public static class Patch_GeneralSettings_OnEnable
+{
+    public static GameObject cameraFollowObject = null;
+    private static void Postfix(ButtonSwitch ___crossPlayToggle, ButtonSwitch ___scenarioSpeedUpToggle)
+    {
+        if (cameraFollowObject == null)
+        {
+            CloneCrossPlayObject(___crossPlayToggle.transform.parent.parent.gameObject, ___scenarioSpeedUpToggle.transform.parent.parent.gameObject);
+        }
+        cameraFollowObject.SetActive(true);
+        ButtonSwitch cameraFollowButton = cameraFollowObject.GetComponentInChildren<ButtonSwitch>();
+        cameraFollowButton.IsOn = CameraFollowHolder.CameraFollowEnabled();
+        GameObject gpt = ___crossPlayToggle.transform.parent.parent.parent.gameObject;
+        Patch_UISubmenuGOWindow_Show.PrintRecursive(gpt.transform, 0);
+    }
+
+    private static void CloneCrossPlayObject(GameObject crossPlay, GameObject speedUp)
+    {
+        cameraFollowObject = GameObject.Instantiate(speedUp, speedUp.transform.parent);
+        cameraFollowObject.name = "Camera Follow";
+        TextLocalizedListener tll = cameraFollowObject.GetComponentInChildren<TextLocalizedListener>();
+        tll.SetTextKey(null);
+        TextMeshProUGUI tmpu = cameraFollowObject.GetComponentInChildren<TextMeshProUGUI>();
+        tmpu.text = "Auto-Camera";
+        ButtonSwitch btns = cameraFollowObject.GetComponentInChildren<ButtonSwitch>();
+        btns.OnValueChanged.RemoveAllListeners();
+        btns.OnValueChanged.AddListener(btns.Refresh);
+        btns.OnValueChanged.AddListener(CameraFollowHolder.ToggleCameraFollow);
+        Vector3 difference = speedUp.transform.position - crossPlay.transform.position;
+        cameraFollowObject.transform.Translate(difference);
+    }
+}
+
+[HarmonyPatch(typeof(GeneralSettings), "OnDestroy")]
+public static class Patch_GeneralSettings_OnDestroy
+{
+    private static void Prefix()
+    {
+        if (Patch_GeneralSettings_OnEnable.cameraFollowObject != null)
+        {
+            GameObject.Destroy(Patch_GeneralSettings_OnEnable.cameraFollowObject);
+        }
+    }
+}
+ 
 [HarmonyPatch(typeof(ControlsSettings), nameof(ControlsSettings.Initialize))]
 public static class Patch_ControlsSettings_Initialize
 {
@@ -262,6 +368,13 @@ public static class Patch_ControlsSettings_Initialize
             BugFixPlugin.logger.LogInfo($"  {ggpt.GetType()} {ggpt} {ggpt.name} {ggpt.tag} {ggpt.GetInstanceID()} {ggpt.activeSelf}");
             GameObject gggpt = ggpt.transform.parent.gameObject;
             BugFixPlugin.logger.LogInfo($"  {gggpt.GetType()} {gggpt} {gggpt.name} {gggpt.tag} {gggpt.GetInstanceID()} {gggpt.activeSelf}");
+
+            /*
+            if (i == 0)
+            {
+                Patch_UISubmenuGOWindow_Show.PrintRecursive(ggpt.transform, 0);
+            }
+            */
         }
     }
 }
@@ -435,6 +548,7 @@ public static class Patch_GlobalData_OnDeserialized
 {
     private static void Postfix(GlobalData __instance)
     {
+        CameraFollowHolder.InitializeCameraFollow(__instance.CompletedTutorialIDs);
         BugFixPlugin.logger.LogInfo("==============================");
         foreach (string str in __instance.CompletedTutorialIDs)
         {
@@ -459,9 +573,6 @@ public static class Patch_KeyActionHandlerController_AddHandler
         }
     }
 }
-
-// FIXME: Note to self: add an option for follow camera disabled?
-// FIXME: put this preference in CompletedTutorialIDs
 
 /*
 [HarmonyPatch(typeof(CameraController), nameof(CameraController.CameraFollowOn), MethodType.Getter)]
