@@ -121,6 +121,16 @@ public static class CameraFollowHolder
                 SaveData.Instance.Global.CompletedTutorialIDs.Add(featureName);
                 SaveData.Instance.SaveGlobalData();
             }
+            if (CameraController.s_CameraController != null)
+            {
+                CameraTargetFocalFollowController ctffc = (CameraTargetFocalFollowController) typeof(CameraController).GetField("_targetFocalFollowController", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(CameraController.s_CameraController);
+                if (ctffc != null && ctffc.IsFollowingTarget)
+                {
+                    ctffc.OnArrivedToPoint();
+                }
+                CameraController.s_CameraController.ResetFocalPointGameObject();
+                // CameraController.s_CameraController.DisableCameraInput(false);
+            }
         }
     }
 
