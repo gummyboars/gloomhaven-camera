@@ -11,11 +11,13 @@ using UnityEngine.UI;
 using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
+using HarmonyLib.Tools;
 
 using MapRuleLibrary.State;
 using Gloomhaven;
 using GLOOM.MainMenu;
 using Script.GUI.SMNavigation.States.MainMenuStates;
+using ScenarioRuleLibrary;
 using SM.Gamepad;
 
 namespace BugFixes;
@@ -27,7 +29,7 @@ public class BugFixPlugin : BaseUnityPlugin
     const string pluginName = "Bug Fixes";
     const string pluginVersion = "0.0.1";
 
-    private readonly Harmony HarmonyInstance = new Harmony(pluginGUID);
+    private Harmony HarmonyInstance = null;
 
     public static ManualLogSource logger = BepInEx.Logging.Logger.CreateLogSource(pluginName);
         
@@ -36,8 +38,15 @@ public class BugFixPlugin : BaseUnityPlugin
         // Plugin startup logic
         BugFixPlugin.logger.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} is loaded!");
 
+        HarmonyFileLog.Enabled = true;
+        HarmonyLib.Tools.Logger.ChannelFilter = HarmonyLib.Tools.Logger.LogChannel.All;
+        BugFixPlugin.logger.LogInfo($"Harmony log path is {HarmonyFileLog.FileWriterPath}");
+        HarmonyInstance = new Harmony(pluginGUID);
+        BugFixPlugin.logger.LogInfo("Harmony instance created");
         Assembly assembly = Assembly.GetExecutingAssembly();
+        BugFixPlugin.logger.LogInfo("Harmony got assembly.");
         HarmonyInstance.PatchAll(assembly);
+        BugFixPlugin.logger.LogInfo("Harmony patched all.");
     }
 }
 
@@ -162,7 +171,108 @@ public static class Patch_SetPoint_Vector3
         return CameraFollowHolder.CameraFollowEnabled();
     }
 }
- 
+
+[HarmonyPatch(typeof(ScenarioRuleClient), nameof(ScenarioRuleClient.Stop), new Type[] {})]
+public static class Patch_ScenarioRuleClient_Stop
+{
+    public static float cameraGameHorizontalAngle = 0;
+    public static float targetZoom = 0;
+
+    private static void Prefix()
+    {
+        if (CameraController.s_CameraController == null)
+        {
+            return;
+        }
+
+        targetZoom = (float) typeof(CameraController).GetField("m_TargetZoom", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(CameraController.s_CameraController);
+        BugFixPlugin.logger.LogInfo($"Saved camera FOV {targetZoom}");
+        if (Choreographer.s_Choreographer != null && Choreographer.s_Choreographer.IsRestarting)
+        {
+            cameraGameHorizontalAngle = (float) typeof(CameraController).GetField("m_CameraGameHorizontalAngle", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(CameraController.s_CameraController);
+            BugFixPlugin.logger.LogInfo($"Saved camera horizontal angle {cameraGameHorizontalAngle}");
+        }
+        else
+        {
+            cameraGameHorizontalAngle = 0;
+            BugFixPlugin.logger.LogInfo("Cleared camera horizontal angle");
+        }
+    }
+}
+
+[HarmonyPatch(typeof(Choreographer), nameof(Choreographer.ScenarioImportProcessedCallback))]
+public static class Patch_Choreographer_ScenarioImportProcessedCallback
+{
+    private static void Postfix()
+    {
+        if (CameraController.s_CameraController == null)
+        {
+            return;
+        }
+        if (Patch_ScenarioRuleClient_Stop.cameraGameHorizontalAngle != 0)
+        {
+            typeof(CameraController).GetField("m_CameraGameHorizontalAngle", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(CameraController.s_CameraController, Patch_ScenarioRuleClient_Stop.cameraGameHorizontalAngle);
+            CameraController.s_CameraController.ResetCameraRotation();
+            BugFixPlugin.logger.LogInfo($"Set camera horizontal angle to {Patch_ScenarioRuleClient_Stop.cameraGameHorizontalAngle}");
+        }
+        else
+        {
+            BugFixPlugin.logger.LogInfo("Did not set camera horizontal angle");
+        }
+        if (Patch_ScenarioRuleClient_Stop.targetZoom != 0)
+        {
+            CameraController.s_CameraController.ZoomToFOV(Patch_ScenarioRuleClient_Stop.targetZoom, 0);
+            BugFixPlugin.logger.LogInfo($"Set camera FOV to {Patch_ScenarioRuleClient_Stop.targetZoom}");
+        }
+        else
+        {
+            BugFixPlugin.logger.LogInfo("Did not set camera FOV");
+        }
+    }
+}
+
+[HarmonyPatch(typeof(CameraController), nameof(CameraController.SetCameraWithMessageProfile))]
+public static class Patch_CameraController_SetCameraWithMessageProfile
+{
+    private static void Prefix(ScenarioRuleLibrary.CustomLevels.CLevelCameraProfile profileToSetTo)
+    {
+        BugFixPlugin.logger.LogInfo($"SetCameraWithMessageProfile called with {profileToSetTo.CameraFieldOfView}");
+    }
+
+    private static void Postfix()
+    {
+        BugFixPlugin.logger.LogInfo("SetCameraWithMessageProfile done");
+    }
+}
+
+[HarmonyPatch(typeof(CameraController), nameof(CameraController.SetCameraDirectionAndFocalPoint))]
+public static class Patch_CameraController_SetCameraDirectionAndFocalPoint
+{
+    private static void Prefix(Transform pointOfView)
+    {
+        BugFixPlugin.logger.LogInfo($"SetCameraDirectionAndFocalPoint called with {pointOfView}");
+    }
+
+    private static void Postfix()
+    {
+        BugFixPlugin.logger.LogInfo("SetCameraDirectionAndFocalPoint  done");
+    }
+}
+
+[HarmonyPatch(typeof(CameraController), nameof(CameraController.InitCamera))]
+public static class Patch_CameraController_InitCamera
+{
+    private static void Prefix()
+    {
+        BugFixPlugin.logger.LogInfo($"SetCameraDirectionAndFocalPoint called with {CameraController.s_InitialHorizontalAngle}");
+    }
+
+    private static void Postfix()
+    {
+        BugFixPlugin.logger.LogInfo("SetCameraDirectionAndFocalPoint  done");
+    }
+}
+
 [HarmonyPatch(typeof(UISubmenuGOWindow), nameof(UISubmenuGOWindow.Show))]
 public static class Patch_UISubmenuGOWindow_Show
 {
