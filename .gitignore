@@ -5,3 +5,5 @@
 # compiled stuff
 bin/*
 obj/*
+*/bin/*
+*/obj/*
