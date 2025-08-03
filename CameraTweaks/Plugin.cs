@@ -21,14 +21,14 @@ using Script.GUI.SMNavigation.States.MainMenuStates;
 using ScenarioRuleLibrary;
 using SM.Gamepad;
 
-namespace BugFixes;
+namespace CameraTweaks;
 
 [BepInPlugin(pluginGUID, pluginName, pluginVersion)]
-public class BugFixPlugin : BaseUnityPlugin
+public class CameraTweaksPlugin : BaseUnityPlugin
 {
-    const string pluginGUID = "com.gummyboars.gloomhaven.bugfixes";
-    const string pluginName = "Bug Fixes";
-    const string pluginVersion = "0.0.1";
+    const string pluginGUID = "com.gummyboars.gloomhaven.cameratweaks";
+    const string pluginName = "Camera Tweaks";
+    const string pluginVersion = "1.0.0";
 
     private Harmony HarmonyInstance = null;
 
@@ -36,18 +36,18 @@ public class BugFixPlugin : BaseUnityPlugin
 
     private void Awake()
     {
-        // Plugin startup logic
-        BugFixPlugin.logger.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} is loaded!");
-
-        HarmonyFileLog.Enabled = true;
-        HarmonyLib.Tools.Logger.ChannelFilter = HarmonyLib.Tools.Logger.LogChannel.All;
-        BugFixPlugin.logger.LogInfo($"Harmony log path is {HarmonyFileLog.FileWriterPath}");
-        HarmonyInstance = new Harmony(pluginGUID);
-        BugFixPlugin.logger.LogInfo("Harmony instance created");
-        Assembly assembly = Assembly.GetExecutingAssembly();
-        BugFixPlugin.logger.LogInfo("Harmony got assembly.");
-        HarmonyInstance.PatchAll(assembly);
-        BugFixPlugin.logger.LogInfo("Harmony patched all.");
+        CameraTweaksPlugin.logger.LogInfo($"Loading plugin {pluginName}.");
+        try
+        {
+            HarmonyInstance = new Harmony(pluginGUID);
+            Assembly assembly = Assembly.GetExecutingAssembly();
+            HarmonyInstance.PatchAll(assembly);
+            CameraTweaksPlugin.logger.LogInfo($"Plugin {pluginName} loaded.");
+        }
+        catch (Exception e)
+        {
+            CameraTweaksPlugin.logger.LogError($"Could not load plugin {pluginName}: {e}");
+        }
     }
 }
 
@@ -234,7 +234,7 @@ public static class CameraSettings
                 }
                 catch (Exception e)
                 {
-                    BugFixPlugin.logger.LogInfo($"{e}");
+                    CameraTweaksPlugin.logger.LogInfo($"{e}");
                 }
                 break;
             }
@@ -366,13 +366,13 @@ public static class PrintHelper
         {
             s += "  ";
         }
-        BugFixPlugin.logger.LogInfo($"{s}{t.gameObject}");
+        CameraTweaksPlugin.logger.LogInfo($"{s}{t.gameObject}");
         if (t.gameObject.name == "Title")
         {
             MonoBehaviour[] lst = t.gameObject.GetComponents<MonoBehaviour>();
             foreach (MonoBehaviour b in lst)
             {
-                BugFixPlugin.logger.LogInfo($"  {s}{b} {b.GetType()}");
+                CameraTweaksPlugin.logger.LogInfo($"  {s}{b} {b.GetType()}");
             }
         }
         foreach(Transform child in t)
