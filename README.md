@@ -8,13 +8,16 @@ This mod makes a few changes to the gloomhaven camera:
 
 ## Installation (Windows)
 1. Install [BepInEx](https://docs.bepinex.dev/articles/user_guide/installation/index.html?tabs=tabid-win)
-2. Copy CameraTweaks.dll to the BepInEx/plugins/ folder
+2. Download `CameraTweaks.dll` from the [latest release](https://github.com/gummyboars/gloomhaven/releases)
+3. Copy `CameraTweaks.dll` to the `BepInEx/plugins/` folder
 
 ## Installation (Mac)
 1. Install [BepInEx](https://docs.bepinex.dev/articles/user_guide/installation/index.html?tabs=tabid-nix)
-2. Copy CameraTweaks.dll to the BepInEx/plugins/ folder
+2. Download `CameraTweaks.dll` from the [latest release](https://github.com/gummyboars/gloomhaven/releases)
+3. Copy `CameraTweaks.dll` to the `BepInEx/plugins/` folder
 
 ## Installation (Linux with Proton/Wine)
 1. Install [BepInEx](https://docs.bepinex.dev/articles/user_guide/installation/index.html?tabs=tabid-nix)
 2. Configure wine for BepInEx using the [instructions](https://docs.bepinex.dev/articles/advanced/proton_wine.html)
-3. Copy CameraTweaks.dll to the BepInEx/plugins/ folder
+3. Download `CameraTweaks.dll` from the [latest release](https://github.com/gummyboars/gloomhaven/releases)
+4. Copy `CameraTweaks.dll` to the `BepInEx/plugins/` folder
