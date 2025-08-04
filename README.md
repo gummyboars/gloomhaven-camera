@@ -6,18 +6,13 @@ This mod makes a few changes to the gloomhaven camera:
 - Remembers the last zoom level that was used
 - When restarting a round, remembers the camera rotation
 
-## Installation (Windows)
-1. Install [BepInEx](https://docs.bepinex.dev/articles/user_guide/installation/index.html?tabs=tabid-win)
-2. Download `CameraTweaks.dll` from the [latest release](https://github.com/gummyboars/gloomhaven/releases)
+## Installation
+1. Install BepInEx ([Windows](https://docs.bepinex.dev/articles/user_guide/installation/index.html?tabs=tabid-win) | [Mac/Linux](https://docs.bepinex.dev/articles/user_guide/installation/index.html?tabs=tabid-nix))
+2. Download `CameraTweaks.dll` from the [latest release](https://github.com/gummyboars/gloomhaven-camera/releases)
 3. Copy `CameraTweaks.dll` to the `BepInEx/plugins/` folder
+4. Proton/Wine users only: [Configure wine](https://docs.bepinex.dev/articles/advanced/proton_wine.html) for BepInEx
 
-## Installation (Mac)
-1. Install [BepInEx](https://docs.bepinex.dev/articles/user_guide/installation/index.html?tabs=tabid-nix)
-2. Download `CameraTweaks.dll` from the [latest release](https://github.com/gummyboars/gloomhaven/releases)
-3. Copy `CameraTweaks.dll` to the `BepInEx/plugins/` folder
+## Notes
+This mod is client-side only. You may safely play with other players that do not have the mod.
 
-## Installation (Linux with Proton/Wine)
-1. Install [BepInEx](https://docs.bepinex.dev/articles/user_guide/installation/index.html?tabs=tabid-nix)
-2. Configure wine for BepInEx using the [instructions](https://docs.bepinex.dev/articles/advanced/proton_wine.html)
-3. Download `CameraTweaks.dll` from the [latest release](https://github.com/gummyboars/gloomhaven/releases)
-4. Copy `CameraTweaks.dll` to the `BepInEx/plugins/` folder
+The global save file is backwards-compatible with the unmodded game.
