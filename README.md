@@ -7,10 +7,10 @@ This mod makes a few changes to the gloomhaven camera:
 - When restarting a round, remembers the camera rotation
 
 ## Installation
-1. Install BepInEx ([Windows](https://docs.bepinex.dev/articles/user_guide/installation/index.html?tabs=tabid-win) | [Mac/Linux](https://docs.bepinex.dev/articles/user_guide/installation/index.html?tabs=tabid-nix))
+1. Install BepInEx 5 (Stable) ([Windows/SteamDeck/Linux](https://docs.bepinex.dev/articles/user_guide/installation/index.html?tabs=tabid-win#where-to-download-bepinex) | [Mac](https://docs.bepinex.dev/articles/user_guide/installation/index.html?tabs=tabid-nix#where-to-download-bepinex))
 2. Download `CameraTweaks.dll` from the [latest release](https://github.com/gummyboars/gloomhaven-camera/releases)
 3. Copy `CameraTweaks.dll` to the `BepInEx/plugins/` folder
-4. Proton/Wine users only: [Configure wine](https://docs.bepinex.dev/articles/advanced/proton_wine.html) for BepInEx
+4. SteamDeck/Proton/Wine users only: [Configure wine](https://docs.bepinex.dev/articles/advanced/proton_wine.html) for BepInEx
 
 ## Notes
 This mod is client-side only. You may safely play with other players that do not have the mod.
